@@ -1,0 +1,67 @@
+FROM debian:stable-slim
+
+RUN apt update
+
+
+RUN set -xe \
+    && DEBIAN_FRONTEND=noninteractive \
+    && apt update \
+    && apt-get install --no-install-recommends --no-install-suggests --yes   dbus-daemon \
+    procps \
+    systemd \
+    systemd-sysv \
+    dbus \
+    dbus-user-session \
+    perl \
+    sudo \
+    locales \
+    libasound2 \
+    libasound2-plugins \
+    alsa-utils \
+    apulse \
+    pulseaudio \
+    pulseaudio-utils \
+    pulsemixer 
+
+# FROM HERE
+# https://stackoverflow.com/questions/56757169/is-there-a-way-to-suppress-update-alternatives-warning-skip-creation-warning
+
+# RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+#    dpkg-reconfigure locales && \
+#    update-locale LANG=en_US.UTF-8
+
+# add user $USER
+ENV PUID='1000' \
+    PGID='1000' \
+    USER='user' 
+
+RUN groupadd --gid "$PGID" "$USER" && \
+    useradd --home-dir /home/$USER --shell /bin/bash --uid "$PUID" --gid "$PGID" "$USER" && \
+    mkdir /home/$USER && \
+    chown -R $USER:$USER /home/$USER && \
+    usermod -aG sudo "$USER" && \
+    usermod -aG adm "$USER" && \
+    cp /etc/skel/.bashrc /home/user/
+
+# add $USER to sudoers
+RUN mkdir -p /etc/sudoers.d && \
+    echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/"${USER}"  && \
+    chmod 0440 /etc/sudoers.d/"$USER" && \
+    cp /etc/skel/.bashrc /home/${USER}
+
+# for sound/audio
+RUN echo "options snd_hda_intel index=1" >/etc/modprobe.d/default.conf
+
+COPY dbus/docker-dbus-entrypoint.sh  opt/
+
+RUN chmod +x /opt/docker-dbus-entrypoint.sh
+ENTRYPOINT ["/opt/docker-dbus-entrypoint.sh"] 
+
+# hier weiter
+# https://github.com/AkihiroSuda/containerized-systemd/blob/master/Dockerfile.ubuntu-20.04
+# build
+# cd ./src
+# docker buildx build --progress=plain -t docker_debian_slim_lastest -f Dockerfile "."
+
+# run
+# docker run -ti docker_debian_slim_lastest bash
