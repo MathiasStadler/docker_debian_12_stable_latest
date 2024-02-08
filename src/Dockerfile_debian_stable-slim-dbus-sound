@@ -18,7 +18,7 @@ RUN set -xe \
     libasound2 \
     libasound2-plugins \
     alsa-utils \
-    apulse \
+    apulse \ 
     pulseaudio \
     pulseaudio-utils \
     pulsemixer 
@@ -40,7 +40,7 @@ RUN groupadd --gid "$PGID" "$USER" && \
     mkdir /home/$USER && \
     chown -R $USER:$USER /home/$USER && \
     usermod -aG sudo "$USER" && \
-    usermod -aG adm "$USER" && \
+    usermod -aG adm,audio "$USER" && \
     cp /etc/skel/.bashrc /home/user/
 
 # add $USER to sudoers
