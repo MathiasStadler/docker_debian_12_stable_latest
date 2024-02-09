@@ -2,26 +2,26 @@ FROM debian:stable-slim
 
 RUN apt update
 
-
 RUN set -xe \
     && DEBIAN_FRONTEND=noninteractive \
     && apt update \
-    && apt-get install --no-install-recommends --no-install-suggests --yes   dbus-daemon \
-    procps \
+    && apt install -qq --yes --purge --no-install-recommends --no-install-suggests procps \
+    dbus-daemon \
     systemd \
     systemd-sysv \
     dbus \
     dbus-user-session \
-    perl \
-    sudo \
-    locales
+    sudo 
+    # perl \
+    # locales \
+    # locales-all
 
 # FROM HERE
 # https://stackoverflow.com/questions/56757169/is-there-a-way-to-suppress-update-alternatives-warning-skip-creation-warning
 
-# RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-#    dpkg-reconfigure locales && \
-#    update-locale LANG=en_US.UTF-8
+# RUN  sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen  \
+#     && dpkg-reconfigure locales  \
+#     && localectl set-locale LANG=en_US.UTF-8 
 
 # add user $USER
 ENV PUID='1000' \
@@ -45,6 +45,13 @@ RUN mkdir -p /etc/sudoers.d && \
 
 COPY dbus/docker-dbus-entrypoint.sh  opt/
 
+# clean up
+RUN apt-get autoremove --yes --auto-remove  && \
+    apt-get clean -y && \
+    apt-get autoclean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+
 RUN chmod +x /opt/docker-dbus-entrypoint.sh
 ENTRYPOINT ["/opt/docker-dbus-entrypoint.sh"] 
 
@@ -52,7 +59,7 @@ ENTRYPOINT ["/opt/docker-dbus-entrypoint.sh"]
 # https://github.com/AkihiroSuda/containerized-systemd/blob/master/Dockerfile.ubuntu-20.04
 # build
 # cd ./src
-# docker buildx build --progress=plain -t docker_debian_slim_lastest -f Dockerfile "."
+# docker buildx build --progress=plain -t docker_debian_slim_dbus -f Dockerfile_debian_stable_slim_dbus "."
 
 # run
-# docker run -ti docker_debian_slim_lastest bash
+# docker run -ti docker_debian_slim_dbus bash

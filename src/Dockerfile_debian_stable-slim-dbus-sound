@@ -54,6 +54,14 @@ RUN echo "options snd_hda_intel index=1" >/etc/modprobe.d/default.conf
 
 COPY dbus/docker-dbus-entrypoint.sh  opt/
 
+
+# clean up
+RUN apt-get autoremove --yes --auto-remove  && \
+    apt-get clean -y && \
+    apt-get autoclean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+
 RUN chmod +x /opt/docker-dbus-entrypoint.sh
 ENTRYPOINT ["/opt/docker-dbus-entrypoint.sh"] 
 
